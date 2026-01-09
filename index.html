@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>圣经积木建造者 - 丰富元素版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+        
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        #header {
+            background-color: rgba(22, 34, 57, 0.95);
+            color: #f5e6ca;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            position: relative;
+        }
+        
+        #logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #f5e6ca, #e4b04a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        #logo i {
+            color: #e4b04a;
+            font-size: 24px;
+        }
+        
+        #menu-btn {
+            background: none;
+            border: none;
+            color: #f5e6ca;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        #game-area {
+            width: 100%;
+            height: calc(100% - 60px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #world-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: linear-gradient(180deg, #87CEEB 30%, #98FB98 70%);
+        }
+        
+        #mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        #move-controls {
+            width: 160px;
+            height: 160px;
+            position: relative;
+            pointer-events: auto;
+        }
+        
+        #joystick-base {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(22, 34, 57, 0.7);
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        #joystick-handle {
+            width: 70px;
+            height: 70px;
+            background-color: rgba(228, 176, 74, 0.9);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        #action-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-end;
+            pointer-events: auto;
+        }
+        
+        .action-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: rgba(22, 34, 57, 0.9);
+            border: 3px solid #e4b04a;
+            color: #f5e6ca;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.9);
+            background-color: rgba(42, 58, 110, 0.9);
+        }
+        
+        #place-btn {
+            background-color: rgba(76, 175, 80, 0.9);
+        }
+        
+        #remove-btn {
+            background-color: rgba(244, 67, 54, 0.9);
+        }
+        
+        #camera-controls {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            pointer-events: auto;
+        }
+        
+        .camera-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(22, 34, 57, 0.9);
+            border: 2px solid #e4b04a;
+            color: #f5e6ca;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .camera-btn:active {
+            transform: scale(0.9);
+            background-color: rgba(42, 58, 110, 0.9);
+        }
+        
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: rgba(22, 34, 57, 0.98);
+            color: #f5e6ca;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 200;
+            transition: left 0.3s ease;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        #sidebar.active {
+            left: 0;
+        }
+        
+        #sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e4b04a;
+        }
+        
+        #sidebar-header h2 {
+            color: #e4b04a;
+            font-size: 22px;
+        }
+        
+        #close-sidebar {
+            background: none;
+            border: none;
+            color: #f5e6ca;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: #e4b04a;
+            margin: 20px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e4b04a;
+        }
+        
+        #blocks-palette {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .block-item {
+            background: linear-gradient(145deg, #2a3a6e, #1e2a4d);
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .block-item:hover, .block-item:active {
+            transform: translateY(-3px);
+            border-color: #e4b04a;
+        }
+        
+        .block-item.selected {
+            border-color: #e4b04a;
+            background: linear-gradient(145deg, #3a4a8e, #2a3a6d);
+            box-shadow: 0 0 10px rgba(228, 176, 74, 0.5);
+        }
+        
+        .block-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #e4b04a;
+        }
+        
+        .block-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        
+        .block-verse {
+            font-size: 10px;
+            color: #a0aec0;
+            font-style: italic;
+        }
+        
+        #current-block-info {
+            background-color: rgba(42, 58, 110, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        #current-block-name {
+            font-size: 16px;
+            color: #e4b04a;
+            margin-bottom: 8px;
+        }
+        
+        #current-block-description {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        #bible-info {
+            background-color: rgba(42, 58, 110, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        #bible-verse {
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            color: #e4b04a;
+            font-size: 14px;
+        }
+        
+        #bible-reference {
+            text-align: right;
+            font-weight: bold;
+            color: #a0aec0;
+            font-size: 13px;
+        }
+        
+        #block-count-display {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(22, 34, 57, 0.8);
+            color: #f5e6ca;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+            z-index: 50;
+            text-align: center;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        #block-count {
+            color: #e4b04a;
+        }
+        
+        #hint {
+            position: absolute;
+            top: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(22, 34, 57, 0.8);
+            color: #f5e6ca;
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            font-size: 13px;
+            z-index: 50;
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+        }
+        
+        #hint i {
+            color: #e4b04a;
+            margin-right: 8px;
+        }
+        
+        #gesture-hint {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(22, 34, 57, 0.8);
+            color: #f5e6ca;
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            font-size: 13px;
+            z-index: 50;
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        #gesture-hint i {
+            color: #e4b04a;
+            font-size: 18px;
+        }
+        
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 150;
+            display: none;
+        }
+        
+        #overlay.active {
+            display: block;
+        }
+        
+        #save-modal, #help-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            background-color: rgba(22, 34, 57, 0.98);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            display: none;
+            color: #f5e6ca;
+        }
+        
+        #save-modal.active, #help-modal.active {
+            display: block;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e4b04a;
+        }
+        
+        .modal-header h3 {
+            color: #e4b04a;
+            font-size: 20px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: #f5e6ca;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        
+        .modal-content {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        
+        .modal-btn {
+            background: linear-gradient(145deg, #2a3a6e, #1e2a4d);
+            color: #f5e6ca;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-btn:hover, .modal-btn:active {
+            background: linear-gradient(145deg, #3a4a8e, #2a3a6d);
+        }
+        
+        #help-content ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        #help-content li {
+            margin-bottom: 12px;
+        }
+        
+        #help-content strong {
+            color: #e4b04a;
+        }
+        
+        /* 添加滚动条样式 */
+        #sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #sidebar::-webkit-scrollbar-track {
+            background: rgba(22, 34, 57, 0.5);
+            border-radius: 4px;
+        }
+        
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #e4b04a;
+            border-radius: 4px;
+        }
+        
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background: #d4a03a;
+        }
+        
+        @media (max-width: 768px) {
+            #move-controls {
+                width: 140px;
+                height: 140px;
+            }
+            
+            #joystick-handle {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .action-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 22px;
+            }
+            
+            .camera-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            #sidebar {
+                width: 280px;
+                left: -280px;
+            }
+            
+            #blocks-palette {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #header {
+                padding: 10px 12px;
+            }
+            
+            #logo h1 {
+                font-size: 18px;
+            }
+            
+            #move-controls {
+                width: 120px;
+                height: 120px;
+            }
+            
+            #joystick-handle {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .action-btn {
+                width: 55px;
+                height: 55px;
+                font-size: 20px;
+            }
+            
+            .camera-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            
+            #block-count-display {
+                top: 70px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            #hint {
+                top: 115px;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            
+            #gesture-hint {
+                bottom: 180px;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            
+            #sidebar {
+                width: 260px;
+                left: -260px;
+                padding: 15px;
+            }
+            
+            .section-title {
+                font-size: 16px;
+            }
+            
+            #blocks-palette {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
+        
+        @media (min-width: 1025px) {
+            #mobile-controls, #camera-controls, #gesture-hint {
+                display: none;
+            }
+            
+            #hint {
+                top: 80px;
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+            
+            #block-count-display {
+                top: 130px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="header">
+            <div id="logo">
+                <i class="fas fa-church"></i>
+                <h1>圣经积木建造者</h1>
+            </div>
+            <button id="menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <div id="game-area">
+            <canvas id="world-canvas"></canvas>
+            
+            <div id="block-count-display">
+                已放置: <span id="block-count">0</span> 个积木
+            </div>
+            
+            <div id="hint">
+                <i class="fas fa-info-circle"></i> 点击菜单按钮选择积木，使用摇杆移动视角
+            </div>
+            
+            <div id="gesture-hint">
+                <i class="fas fa-hand-point-up"></i> 双指捏合缩放视角，双指拖动旋转视角
+            </div>
+            
+            <div id="mobile-controls">
+                <div id="move-controls">
+                    <div id="joystick-base"></div>
+                    <div id="joystick-handle"></div>
+                </div>
+                
+                <div id="action-controls">
+                    <button id="place-btn" class="action-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button id="remove-btn" class="action-btn">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="camera-controls">
+                <button id="zoom-in-btn" class="camera-btn">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+                <button id="zoom-out-btn" class="camera-btn">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <button id="reset-camera-btn" class="camera-btn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="sidebar">
+            <div id="sidebar-header">
+                <h2>圣经积木库</h2>
+                <button id="close-sidebar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div>
+                <h3 class="section-title">
+                    <i class="fas fa-cubes"></i>
+                    选择积木 (共15种)
+                </h3>
+                <div id="blocks-palette">
+                    <!-- 积木选项将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <div id="current-block-info">
+                <div id="current-block-name">基石 (创世记 28:18)</div>
+                <div id="current-block-description">雅各用作枕头的石头，后来被立为柱子浇油，作为神的殿的标记。</div>
+            </div>
+            
+            <div id="bible-info">
+                <div id="bible-verse">"起初，神创造天地。"</div>
+                <div id="bible-reference">创世记 1:1</div>
+            </div>
+            
+            <h3 class="section-title">
+                <i class="fas fa-tools"></i>
+                游戏工具
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="save-world-btn" class="modal-btn" style="width: 100%;">
+                    <i class="fas fa-save"></i> 保存世界
+                </button>
+                <button id="reset-world-btn" class="modal-btn" style="width: 100%; background: linear-gradient(145deg, #8B0000, #B22222);">
+                    <i class="fas fa-redo"></i> 重置世界
+                </button>
+                <button id="show-help-btn" class="modal-btn" style="width: 100%; background: linear-gradient(145deg, #2E8B57, #3CB371);">
+                    <i class="fas fa-question-circle"></i> 游戏帮助
+                </button>
+            </div>
+        </div>
+        
+        <div id="overlay"></div>
+        
+        <div id="save-modal">
+            <div class="modal-header">
+                <h3>保存世界</h3>
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <p>您的世界已保存！您可以在浏览器本地存储中找到您的创作。</p>
+                <p>实际上，在这个演示版本中，您的创作会在刷新页面后丢失。完整版本会实现本地保存功能。</p>
+            </div>
+            <div class="modal-actions">
+                <button id="confirm-save" class="modal-btn">确定</button>
+            </div>
+        </div>
+        
+        <div id="help-modal">
+            <div class="modal-header">
+                <h3>游戏帮助</h3>
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="help-content" class="modal-content">
+                <p><strong>圣经积木建造者 - 丰富元素版</strong></p>
+                <p>游戏目标：使用圣经中的元素建造您的世界。</p>
+                
+                <p><strong>控制方式：</strong></p>
+                <ul>
+                    <li><strong>左侧摇杆</strong>：移动视角</li>
+                    <li><strong>绿色 + 按钮</strong>：放置积木</li>
+                    <li><strong>红色 - 按钮</strong>：移除积木</li>
+                    <li><strong>双指捏合</strong>：缩放视角</li>
+                    <li><strong>双指拖动</strong>：旋转视角</li>
+                    <li><strong>右侧相机按钮</strong>：缩放和重置视角</li>
+                </ul>
+                
+                <p><strong>游戏说明：</strong></p>
+                <p>包含15种圣经元素积木，每个积木都与圣经中的特定经文相关，您可以在侧边栏查看详细信息。</p>
+                <p>点击菜单按钮打开积木库，选择不同的圣经积木进行建造。</p>
+                
+                <p>尽情发挥创意，建造属于您的圣经世界吧！</p>
+            </div>
+            <div class="modal-actions">
+                <button id="confirm-help" class="modal-btn">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏主逻辑 - 丰富元素版
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取Canvas元素和上下文
+            const canvas = document.getElementById('world-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置Canvas尺寸为窗口大小
+            function resizeCanvas() {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            
+            // 游戏状态
+            const gameState = {
+                blocks: [],
+                selectedBlock: 0,
+                camera: {
+                    x: 0,
+                    y: 150,
+                    z: 200,
+                    rx: -0.3,
+                    ry: 0.2,
+                    fov: 90
+                },
+                blockCount: 0,
+                joystick: {
+                    active: false,
+                    x: 0,
+                    y: 0,
+                    baseX: 0,
+                    baseY: 0,
+                    handleX: 0,
+                    handleY: 0,
+                    maxRadius: 60
+                },
+                touch: {
+                    startDistance: 0,
+                    startFov: 90,
+                    startRX: -0.3,
+                    startRY: 0.2,
+                    startX: 0,
+                    startY: 0,
+                    twoFinger: false
+                }
+            };
+            
+            // 丰富的圣经积木数据 - 共15种
+            const bibleBlocks = [
+                { 
+                    id: 0,
+                    name: "基石", 
+                    icon: "fas fa-gem",
+                    color: "#8B7355",
+                    verse: "创世记 28:18",
+                    description: "雅各用作枕头的石头，后来被立为柱子浇油，作为神的殿的标记。",
+                    verseText: "雅各清早起来，把所枕的石头立作柱子，浇油在上面。"
+                },
+                { 
+                    id: 1,
+                    name: "圣经书本", 
+                    icon: "fas fa-book-bible",
+                    color: "#8B0000",
+                    verse: "提摩太后书 3:16",
+                    description: "圣经都是神所默示的，于教训、督责、使人归正、教导人学义都是有益的。",
+                    verseText: "圣经都是神所默示的，于教训、督责、使人归正、教导人学义都是有益的。"
+                },
+                { 
+                    id: 2,
+                    name: "十字架", 
+                    icon: "fas fa-cross",
+                    color: "#DAA520",
+                    verse: "哥林多前书 1:18",
+                    description: "因为十字架的道理，在那灭亡的人为愚拙；在我们得救的人，却为神的大能。",
+                    verseText: "因为十字架的道理，在那灭亡的人为愚拙；在我们得救的人，却为神的大能。"
+                },
+                { 
+                    id: 3,
+                    name: "圣殿", 
+                    icon: "fas fa-church",
+                    color: "#C0C0C0",
+                    verse: "列王纪上 6:1",
+                    description: "以色列人出埃及地后四百八十年，所罗门作以色列王第四年，他开工建造耶和华的殿。",
+                    verseText: "以色列人出埃及地后四百八十年，所罗门作以色列王第四年，他开工建造耶和华的殿。"
+                },
+                { 
+                    id: 4,
+                    name: "葡萄树", 
+                    icon: "fas fa-wine-bottle",
+                    color: "#228B22",
+                    verse: "约翰福音 15:5",
+                    description: "耶稣用葡萄树和枝子比喻他与信徒的关系，枝子要常在葡萄树上才能结果子。",
+                    verseText: "我是葡萄树，你们是枝子。常在我里面的，我也常在他里面，这人就多结果子。"
+                },
+                { 
+                    id: 5,
+                    name: "磐石", 
+                    icon: "fas fa-mountain",
+                    color: "#696969",
+                    verse: "马太福音 16:18",
+                    description: "耶稣对彼得说：'你是彼得，我要把我的教会建造在这磐石上，阴间的权柄不能胜过他。'",
+                    verseText: "你是彼得，我要把我的教会建造在这磐石上，阴间的权柄不能胜过他。"
+                },
+                { 
+                    id: 6,
+                    name: "约柜", 
+                    icon: "fas fa-archive",
+                    color: "#DAA520",
+                    verse: "出埃及记 25:10",
+                    description: "用皂荚木做的柜子，里外包上精金，四围镶上金牙边，里面放着法版，是神与以色列人立约的象征。",
+                    verseText: "要用皂荚木做一柜，长二肘半，宽一肘半，高一肘半。"
+                },
+                { 
+                    id: 7,
+                    name: "灯台", 
+                    icon: "fas fa-menorah",
+                    color: "#FFD700",
+                    verse: "出埃及记 25:31",
+                    description: "用精金作的灯台，有七个枝子，每个枝子上有灯盏，照亮圣所。",
+                    verseText: "要用精金做一个灯台。灯台的座和干与杯、球、花都要接连一块锤出来。"
+                },
+                { 
+                    id: 8,
+                    name: "祭坛", 
+                    icon: "fas fa-fire-alt",
+                    color: "#8B4513",
+                    verse: "创世记 8:20",
+                    description: "挪亚为耶和华筑了一座坛，拿各类洁净的牲畜、飞鸟献在坛上为燔祭。",
+                    verseText: "挪亚为耶和华筑了一座坛，拿各类洁净的牲畜、飞鸟献在坛上为燔祭。"
+                },
+                { 
+                    id: 9,
+                    name: "橄榄树", 
+                    icon: "fas fa-leaf",
+                    color: "#32CD32",
+                    verse: "罗马书 11:17",
+                    description: "野橄榄得接在其中，一同得着橄榄根的肥汁。比喻外邦人因信得以接在神的约中。",
+                    verseText: "若有几根枝子被折下来，你这野橄榄得接在其中，一同得着橄榄根的肥汁。"
+                },
+                { 
+                    id: 10,
+                    name: "会幕", 
+                    icon: "fas fa-campground",
+                    color: "#DEB887",
+                    verse: "出埃及记 26:1",
+                    description: "神指示摩西建造会幕，作为神在旷野与以色列人同住的居所。",
+                    verseText: "你要用十幅幔子作帐幕。这些幔子要用捻的细麻和蓝色、紫色、朱红色线制造。"
+                },
+                { 
+                    id: 11,
+                    name: "吗哪", 
+                    icon: "fas fa-bread-slice",
+                    color: "#FFD700",
+                    verse: "出埃及记 16:31",
+                    description: "神在旷野赐给以色列人的食物，样子像芫荽子，颜色是白的，滋味如同搀蜜的薄饼。",
+                    verseText: "这食物，以色列家叫吗哪；样子像芫荽子，颜色是白的，滋味如同搀蜜的薄饼。"
+                },
+                { 
+                    id: 12,
+                    name: "活水", 
+                    icon: "fas fa-water",
+                    color: "#1E90FF",
+                    verse: "约翰福音 4:14",
+                    description: "耶稣对撒玛利亚妇人说，他赐的水要在人里头成为泉源，直涌到永生。",
+                    verseText: "人若喝我所赐的水就永远不渴。我所赐的水要在他里头成为泉源，直涌到永生。"
+                },
+                { 
+                    id: 13,
+                    name: "珍珠", 
+                    icon: "fas fa-gem",
+                    color: "#E6E6FA",
+                    verse: "马太福音 13:45-46",
+                    description: "天国好像买卖人寻找好珠子，遇见一颗重价的珠子，就去变卖一切所有的，买了这颗珠子。",
+                    verseText: "天国又好像买卖人寻找好珠子，遇见一颗重价的珠子，就去变卖他一切所有的，买了这颗珠子。"
+                },
+                { 
+                    id: 14,
+                    name: "火柱", 
+                    icon: "fas fa-fire",
+                    color: "#FF4500",
+                    verse: "出埃及记 13:21",
+                    description: "神在夜间用火柱照亮以色列人的道路，引领他们穿越旷野。",
+                    verseText: "日间，耶和华在云柱中领他们的路；夜间，在火柱中光照他们。"
+                }
+            ];
+            
+            // 初始化积木选择面板
+            function initBlockPalette() {
+                const palette = document.getElementById('blocks-palette');
+                palette.innerHTML = '';
+                
+                bibleBlocks.forEach(block => {
+                    const blockItem = document.createElement('div');
+                    blockItem.className = 'block-item';
+                    blockItem.dataset.id = block.id;
+                    
+                    blockItem.innerHTML = `
+                        <div class="block-icon"><i class="${block.icon}"></i></div>
+                        <div class="block-name">${block.name}</div>
+                        <div class="block-verse">${block.verse}</div>
+                    `;
+                    
+                    blockItem.addEventListener('click', () => {
+                        selectBlock(block.id);
+                        // 在移动设备上选择积木后自动关闭侧边栏
+                        closeSidebar();
+                    });
+                    
+                    palette.appendChild(blockItem);
+                });
+                
+                // 默认选择第一个积木
+                selectBlock(0);
+            }
+            
+            // 选择积木
+            function selectBlock(id) {
+                gameState.selectedBlock = id;
+                
+                // 更新UI
+                document.querySelectorAll('.block-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                
+                document.querySelector(`.block-item[data-id="${id}"]`).classList.add('selected');
+                
+                // 更新当前积木信息
+                const block = bibleBlocks[id];
+                document.getElementById('current-block-name').textContent = `${block.name} (${block.verse})`;
+                document.getElementById('current-block-description').textContent = block.description;
+                
+                // 更新圣经经文
+                document.getElementById('bible-verse').textContent = `"${block.verseText}"`;
+                document.getElementById('bible-reference').textContent = block.verse;
+            }
+            
+            // 3D投影函数
+            function project(x, y, z) {
+                // 简化3D投影：将3D坐标转换为2D画布坐标
+                const scale = gameState.camera.fov / (gameState.camera.fov + z + gameState.camera.z);
+                const px = (x + gameState.camera.x) * scale + canvas.width / 2;
+                const py = (y + gameState.camera.y) * scale + canvas.height / 2;
+                return { px, py, scale };
+            }
+            
+            // 绘制方块 - 根据积木类型调整绘制方式
+            function drawBlock(x, y, z, blockData) {
+                // 应用相机旋转
+                const cosRY = Math.cos(gameState.camera.ry);
+                const sinRY = Math.sin(gameState.camera.ry);
+                const cosRX = Math.cos(gameState.camera.rx);
+                const sinRX = Math.sin(gameState.camera.rx);
+                
+                // 相对相机位置
+                let dx = x - gameState.camera.x;
+                let dy = y - gameState.camera.y;
+                let dz = z - gameState.camera.z;
+                
+                // 绕Y轴旋转
+                let tempX = dx * cosRY - dz * sinRY;
+                let tempZ = dz * cosRY + dx * sinRY;
+                
+                // 绕X轴旋转
+                let tempY = dy * cosRX - tempZ * sinRX;
+                tempZ = tempZ * cosRX + dy * sinRX;
+                
+                // 投影到2D
+                const proj = project(tempX, tempY, tempZ);
+                
+                // 如果方块在相机后面，不绘制
+                if (tempZ < 0) return;
+                
+                // 根据积木类型调整大小
+                let size = 80 * proj.scale;
+                
+                // 特殊积木调整大小
+                if (blockData.id === 1) { // 圣经书本
+                    size = 70 * proj.scale;
+                } else if (blockData.id === 2) { // 十字架
+                    size = 60 * proj.scale;
+                } else if (blockData.id === 3) { // 圣殿
+                    size = 90 * proj.scale;
+                } else if (blockData.id === 7) { // 灯台
+                    size = 65 * proj.scale;
+                }
+                
+                // 如果方块太小，不绘制（性能优化）
+                if (size < 2) return;
+                
+                // 绘制立方体前面
+                ctx.fillStyle = blockData.color;
+                ctx.fillRect(proj.px - size/2, proj.py - size/2, size, size);
+                
+                // 为特殊积木添加纹理
+                if (blockData.id === 1) { // 圣经书本 - 添加十字和文字效果
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.font = `${size/4}px Arial`;
+                    ctx.textAlign = "center";
+                    ctx.fillText("✝", proj.px, proj.py + size/8);
+                } else if (blockData.id === 2) { // 十字架 - 绘制十字形状
+                    ctx.fillStyle = "#FFFFFF";
+                    // 绘制竖条
+                    ctx.fillRect(proj.px - size/10, proj.py - size/2, size/5, size);
+                    // 绘制横条
+                    ctx.fillRect(proj.px - size/2, proj.py - size/10, size, size/5);
+                } else if (blockData.id === 3) { // 圣殿 - 添加屋顶
+                    ctx.fillStyle = adjustColor(blockData.color, -40);
+                    ctx.beginPath();
+                    ctx.moveTo(proj.px - size/2, proj.py - size/2);
+                    ctx.lineTo(proj.px, proj.py - size);
+                    ctx.lineTo(proj.px + size/2, proj.py - size/2);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (blockData.id === 7) { // 灯台 - 绘制七个分支
+                    ctx.fillStyle = adjustColor(blockData.color, 20);
+                    for (let i = -3; i <= 3; i++) {
+                        const branchX = proj.px + i * size/4;
+                        const branchY = proj.py - size/3;
+                        ctx.beginPath();
+                        ctx.arc(branchX, branchY, size/8, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                } else {
+                    // 绘制立方体顶部（简单3D效果）
+                    ctx.fillStyle = adjustColor(blockData.color, -30);
+                    ctx.beginPath();
+                    ctx.moveTo(proj.px - size/2, proj.py - size/2);
+                    ctx.lineTo(proj.px - size/4, proj.py - size);
+                    ctx.lineTo(proj.px + size/4, proj.py - size);
+                    ctx.lineTo(proj.px + size/2, proj.py - size/2);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // 绘制立方体侧面
+                    ctx.fillStyle = adjustColor(blockData.color, -50);
+                    ctx.beginPath();
+                    ctx.moveTo(proj.px + size/2, proj.py - size/2);
+                    ctx.lineTo(proj.px + size/4, proj.py - size);
+                    ctx.lineTo(proj.px + size/4, proj.py);
+                    ctx.lineTo(proj.px + size/2, proj.py + size/2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                // 添加边框，让积木更清晰
+                ctx.strokeStyle = adjustColor(blockData.color, -80);
+                ctx.lineWidth = 2;
+                ctx.strokeRect(proj.px - size/2, proj.py - size/2, size, size);
+            }
+            
+            // 调整颜色亮度
+            function adjustColor(hex, percent) {
+                let r = parseInt(hex.slice(1, 3), 16);
+                let g = parseInt(hex.slice(3, 5), 16);
+                let b = parseInt(hex.slice(5, 7), 16);
+                
+                r = Math.max(0, Math.min(255, r + percent));
+                g = Math.max(0, Math.min(255, g + percent));
+                b = Math.max(0, Math.min(255, b + percent));
+                
+                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+            }
+            
+            // 绘制网格地面
+            function drawGrid() {
+                const gridSize = 300;
+                const gridStep = 30;
+                
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                
+                for (let x = -gridSize; x <= gridSize; x += gridStep) {
+                    const projStart = project(x, 0, -gridSize);
+                    const projEnd = project(x, 0, gridSize);
+                    
+                    if (projStart.scale > 0 && projEnd.scale > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(projStart.px, projStart.py);
+                        ctx.lineTo(projEnd.px, projEnd.py);
+                        ctx.stroke();
+                    }
+                }
+                
+                for (let z = -gridSize; z <= gridSize; z += gridStep) {
+                    const projStart = project(-gridSize, 0, z);
+                    const projEnd = project(gridSize, 0, z);
+                    
+                    if (projStart.scale > 0 && projEnd.scale > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(projStart.px, projStart.py);
+                        ctx.lineTo(projEnd.px, projEnd.py);
+                        ctx.stroke();
+                    }
+                }
+                
+                // 绘制中心十字，帮助定位
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.lineWidth = 2;
+                
+                const centerX = project(0, 0, 0);
+                const centerZ = project(0, 0, 0);
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX.px - 20, centerX.py);
+                ctx.lineTo(centerX.px + 20, centerX.py);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(centerZ.px, centerZ.py - 20);
+                ctx.lineTo(centerZ.px, centerZ.py + 20);
+                ctx.stroke();
+            }
+            
+            // 获取触摸位置对应的网格位置
+            function getGridPosition(clientX, clientY) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = clientX - rect.left;
+                const mouseY = clientY - rect.top;
+                
+                // 简化：将触摸位置映射到3D空间中的地面位置
+                const gridX = Math.round((mouseX - canvas.width/2) / 5) * 5 + gameState.camera.x;
+                const gridZ = Math.round((mouseY - canvas.height/2) / 5) * 5 + gameState.camera.z;
+                const gridY = 0; // 地面高度
+                
+                // 对齐到网格
+                const snapGrid = 40;
+                const snappedX = Math.round(gridX / snapGrid) * snapGrid;
+                const snappedZ = Math.round(gridZ / snapGrid) * snapGrid;
+                
+                return { x: snappedX, y: gridY, z: snappedZ };
+            }
+            
+            // 放置方块
+            function placeBlock(x, y, z) {
+                // 检查该位置是否已经有方块
+                const existingBlock = gameState.blocks.find(block => 
+                    Math.abs(block.x - x) < 20 && 
+                    Math.abs(block.y - y) < 20 && 
+                    Math.abs(block.z - z) < 20
+                );
+                
+                if (!existingBlock) {
+                    const blockType = bibleBlocks[gameState.selectedBlock];
+                    gameState.blocks.push({
+                        x, y, z,
+                        type: gameState.selectedBlock,
+                        color: blockType.color,
+                        data: blockType
+                    });
+                    
+                    gameState.blockCount++;
+                    updateBlockCount();
+                }
+            }
+            
+            // 移除方块
+            function removeBlock(x, y, z) {
+                const index = gameState.blocks.findIndex(block => 
+                    Math.abs(block.x - x) < 20 && 
+                    Math.abs(block.y - y) < 20 && 
+                    Math.abs(block.z - z) < 20
+                );
+                
+                if (index !== -1) {
+                    gameState.blocks.splice(index, 1);
+                    gameState.blockCount--;
+                    updateBlockCount();
+                }
+            }
+            
+            // 更新方块计数显示
+            function updateBlockCount() {
+                document.getElementById('block-count').textContent = gameState.blockCount;
+            }
+            
+            // 绘制预览方块（触摸位置）
+            function drawPreviewBlock(x, y, z) {
+                const blockType = bibleBlocks[gameState.selectedBlock];
+                drawBlock(x, y, z, blockType);
+            }
+            
+            // 初始化虚拟摇杆
+            function initJoystick() {
+                const joystickBase = document.getElementById('joystick-base');
+                const joystickHandle = document.getElementById('joystick-handle');
+                const moveControls = document.getElementById('move-controls');
+                
+                // 获取摇杆基座位置
+                const rect = moveControls.getBoundingClientRect();
+                gameState.joystick.baseX = rect.left + rect.width / 2;
+                gameState.joystick.baseY = rect.top + rect.height / 2;
+                gameState.joystick.handleX = gameState.joystick.baseX;
+                gameState.joystick.handleY = gameState.joystick.baseY;
+                
+                // 更新摇杆手柄位置
+                function updateJoystickHandle(x, y) {
+                    const dx = x - gameState.joystick.baseX;
+                    const dy = y - gameState.joystick.baseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 限制摇杆移动范围
+                    const limitedDistance = Math.min(distance, gameState.joystick.maxRadius);
+                    const angle = Math.atan2(dy, dx);
+                    
+                    gameState.joystick.x = Math.cos(angle) * limitedDistance;
+                    gameState.joystick.y = Math.sin(angle) * limitedDistance;
+                    
+                    // 更新手柄位置
+                    gameState.joystick.handleX = gameState.joystick.baseX + gameState.joystick.x;
+                    gameState.joystick.handleY = gameState.joystick.baseY + gameState.joystick.y;
+                    
+                    // 更新UI
+                    joystickHandle.style.left = (gameState.joystick.x / rect.width * 100) + 50 + '%';
+                    joystickHandle.style.top = (gameState.joystick.y / rect.height * 100) + 50 + '%';
+                }
+                
+                // 触摸事件处理
+                moveControls.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    gameState.joystick.active = true;
+                    const touch = e.touches[0];
+                    updateJoystickHandle(touch.clientX, touch.clientY);
+                });
+                
+                document.addEventListener('touchmove', function(e) {
+                    if (!gameState.joystick.active) return;
+                    
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    updateJoystickHandle(touch.clientX, touch.clientY);
+                });
+                
+                document.addEventListener('touchend', function(e) {
+                    if (!gameState.joystick.active) return;
+                    
+                    // 重置摇杆位置
+                    gameState.joystick.active = false;
+                    gameState.joystick.x = 0;
+                    gameState.joystick.y = 0;
+                    gameState.joystick.handleX = gameState.joystick.baseX;
+                    gameState.joystick.handleY = gameState.joystick.baseY;
+                    
+                    // 更新UI
+                    joystickHandle.style.left = '50%';
+                    joystickHandle.style.top = '50%';
+                });
+            }
+            
+            // 主渲染循环
+            function render() {
+                // 清除画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制天空渐变
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                skyGradient.addColorStop(0, '#87CEEB');
+                skyGradient.addColorStop(1, '#98FB98');
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制网格地面
+                drawGrid();
+                
+                // 绘制所有已放置的方块
+                gameState.blocks.forEach(block => {
+                    drawBlock(block.x, block.y, block.z, block.data);
+                });
+                
+                // 绘制预览方块（在屏幕中央）
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const gridPos = getGridPosition(centerX, centerY);
+                const blockType = bibleBlocks[gameState.selectedBlock];
+                
+                // 绘制半透明的预览方块
+                ctx.globalAlpha = 0.7;
+                drawBlock(gridPos.x, gridPos.y, gridPos.z, blockType);
+                ctx.globalAlpha = 1.0;
+                
+                // 请求下一帧
+                requestAnimationFrame(render);
+            }
+            
+            // 游戏循环 - 处理移动和相机控制
+            function gameLoop() {
+                // 摇杆控制相机移动
+                if (gameState.joystick.active) {
+                    const moveSpeed = 8;
+                    const cosRY = Math.cos(gameState.camera.ry);
+                    const sinRY = Math.sin(gameState.camera.ry);
+                    
+                    // 根据摇杆位置计算移动方向
+                    const forward = -gameState.joystick.y / gameState.joystick.maxRadius;
+                    const right = gameState.joystick.x / gameState.joystick.maxRadius;
+                    
+                    gameState.camera.x += (sinRY * forward + cosRY * right) * moveSpeed;
+                    gameState.camera.z += (-cosRY * forward + sinRY * right) * moveSpeed;
+                }
+                
+                // 继续游戏循环
+                requestAnimationFrame(gameLoop);
+            }
+            
+            // 初始化UI事件
+            function initUIEvents() {
+                // 菜单按钮
+                document.getElementById('menu-btn').addEventListener('click', openSidebar);
+                document.getElementById('close-sidebar').addEventListener('click', closeSidebar);
+                document.getElementById('overlay').addEventListener('click', closeSidebar);
+                
+                // 放置和移除按钮
+                document.getElementById('place-btn').addEventListener('click', function() {
+                    // 在屏幕中央放置方块
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const gridPos = getGridPosition(centerX, centerY);
+                    placeBlock(gridPos.x, gridPos.y, gridPos.z);
+                    
+                    // 添加视觉反馈
+                    this.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+                
+                document.getElementById('remove-btn').addEventListener('click', function() {
+                    // 移除屏幕中央的方块
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const gridPos = getGridPosition(centerX, centerY);
+                    removeBlock(gridPos.x, gridPos.y, gridPos.z);
+                    
+                    // 添加视觉反馈
+                    this.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+                
+                // 相机控制按钮
+                document.getElementById('zoom-in-btn').addEventListener('click', function() {
+                    gameState.camera.fov = Math.max(40, gameState.camera.fov - 10);
+                    this.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+                
+                document.getElementById('zoom-out-btn').addEventListener('click', function() {
+                    gameState.camera.fov = Math.min(150, gameState.camera.fov + 10);
+                    this.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+                
+                document.getElementById('reset-camera-btn').addEventListener('click', function() {
+                    // 重置到优化的视角
+                    gameState.camera.x = 0;
+                    gameState.camera.y = 150;
+                    gameState.camera.z = 200;
+                    gameState.camera.rx = -0.3;
+                    gameState.camera.ry = 0.2;
+                    gameState.camera.fov = 90;
+                    this.style.transform = 'scale(0.85)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+                
+                // 工具按钮
+                document.getElementById('save-world-btn').addEventListener('click', function() {
+                    openModal('save-modal');
+                });
+                
+                document.getElementById('reset-world-btn').addEventListener('click', function() {
+                    if (confirm('确定要重置整个世界吗？这将删除所有已放置的积木。')) {
+                        gameState.blocks = [];
+                        gameState.blockCount = 0;
+                        updateBlockCount();
+                    }
+                });
+                
+                document.getElementById('show-help-btn').addEventListener('click', function() {
+                    openModal('help-modal');
+                });
+                
+                // 模态框关闭按钮
+                document.querySelectorAll('.close-modal').forEach(btn => {
+                    btn.addEventListener('click', closeAllModals);
+                });
+                
+                document.getElementById('confirm-save').addEventListener('click', closeAllModals);
+                document.getElementById('confirm-help').addEventListener('click', closeAllModals);
+                
+                // 触摸手势控制
+                initTouchGestures();
+            }
+            
+            // 初始化触摸手势（双指缩放和旋转）
+            function initTouchGestures() {
+                let initialTouches = [];
+                
+                canvas.addEventListener('touchstart', function(e) {
+                    if (e.touches.length === 2) {
+                        e.preventDefault();
+                        initialTouches = [
+                            {x: e.touches[0].clientX, y: e.touches[0].clientY},
+                            {x: e.touches[1].clientX, y: e.touches[1].clientY}
+                        ];
+                        
+                        // 计算初始距离和角度
+                        const dx = initialTouches[1].x - initialTouches[0].x;
+                        const dy = initialTouches[1].y - initialTouches[0].y;
+                        gameState.touch.startDistance = Math.sqrt(dx * dx + dy * dy);
+                        gameState.touch.startFov = gameState.camera.fov;
+                        gameState.touch.startRX = gameState.camera.rx;
+                        gameState.touch.startRY = gameState.camera.ry;
+                        gameState.touch.twoFinger = true;
+                        
+                        // 隐藏手势提示
+                        document.getElementById('gesture-hint').style.display = 'none';
+                    }
+                });
+                
+                canvas.addEventListener('touchmove', function(e) {
+                    if (e.touches.length === 2 && gameState.touch.twoFinger) {
+                        e.preventDefault();
+                        
+                        const currentTouches = [
+                            {x: e.touches[0].clientX, y: e.touches[0].clientY},
+                            {x: e.touches[1].clientX, y: e.touches[1].clientY}
+                        ];
+                        
+                        // 计算当前距离
+                        const dx = currentTouches[1].x - currentTouches[0].x;
+                        const dy = currentTouches[1].y - currentTouches[0].y;
+                        const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // 缩放：基于距离变化调整FOV
+                        const scaleFactor = gameState.touch.startDistance / currentDistance;
+                        gameState.camera.fov = Math.max(40, Math.min(150, gameState.touch.startFov * scaleFactor));
+                        
+                        // 旋转：基于中点变化调整相机角度
+                        const startMidX = (initialTouches[0].x + initialTouches[1].x) / 2;
+                        const startMidY = (initialTouches[0].y + initialTouches[1].y) / 2;
+                        const currentMidX = (currentTouches[0].x + currentTouches[1].x) / 2;
+                        const currentMidY = (currentTouches[0].y + currentTouches[1].y) / 2;
+                        
+                        const deltaX = currentMidX - startMidX;
+                        const deltaY = currentMidY - startMidY;
+                        
+                        const sensitivity = 0.008;
+                        gameState.camera.ry = gameState.touch.startRY - deltaX * sensitivity;
+                        gameState.camera.rx = Math.max(-Math.PI/2, Math.min(Math.PI/2, gameState.touch.startRX - deltaY * sensitivity));
+                    }
+                });
+                
+                canvas.addEventListener('touchend', function(e) {
+                    if (gameState.touch.twoFinger && e.touches.length < 2) {
+                        gameState.touch.twoFinger = false;
+                    }
+                });
+            }
+            
+            // 侧边栏控制
+            function openSidebar() {
+                document.getElementById('sidebar').classList.add('active');
+                document.getElementById('overlay').classList.add('active');
+            }
+            
+            function closeSidebar() {
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+            
+            // 模态框控制
+            function openModal(modalId) {
+                closeSidebar();
+                document.getElementById(modalId).classList.add('active');
+                document.getElementById('overlay').classList.add('active');
+            }
+            
+            function closeAllModals() {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                document.getElementById('overlay').classList.remove('active');
+            }
+            
+            // 初始化游戏
+            function initGame() {
+                initBlockPalette();
+                initJoystick();
+                initUIEvents();
+                render();
+                gameLoop();
+                
+                // 添加一些初始方块作为示例
+                placeBlock(0, 0, 0);
+                placeBlock(40, 0, 0);
+                placeBlock(-40, 0, 0);
+                placeBlock(0, 0, 40);
+                placeBlock(0, 0, -40);
+                placeBlock(0, 40, 0);
+                
+                // 5秒后隐藏手势提示
+                setTimeout(() => {
+                    document.getElementById('gesture-hint').style.opacity = '0.7';
+                }, 5000);
+                
+                // 10秒后完全隐藏手势提示
+                setTimeout(() => {
+                    document.getElementById('gesture-hint').style.display = 'none';
+                }, 10000);
+            }
+            
+            // 启动游戏
+            initGame();
+        });
+    </script>
+</body>
+</html>
